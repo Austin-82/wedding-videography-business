@@ -1,3 +1,4 @@
+## Wedding Videography Business Project
 This project aims to provide valuable insights into revenue trends, employee activity, popular wedding video packages and other key metrics 
 through a series of complex SQL queries.
 
