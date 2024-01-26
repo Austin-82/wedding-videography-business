@@ -24,20 +24,14 @@ ORDER BY 1 DESC;
 -- 2.
 -- Calculate total revenue for each package type over the past 12 months, sorted by revenue in descending order
 
-WITH CTE AS
-(
-	SELECT
-		booked_date,
-		order_amount,
-		package_type
-	FROM orders
-	WHERE booked_date >= DATE_SUB((SELECT MAX(booked_date) FROM orders), INTERVAL 12 Month)
-)
-
-SELECT package_type, SUM(order_amount) AS 'Total Revenue'
-FROM CTE
+SELECT
+	SUM(order_amount) AS order_amount,
+	package_type 
+FROM orders
+WHERE booked_date >= DATE_SUB((SELECT MAX(booked_date) FROM orders), INTERVAL 12 Month)
 GROUP BY package_type
-ORDER BY 2 DESC;
+ORDER BY SUM(order_amount) DESC
+
 
 -- 3.
 -- Identify videographers who shot the most weddings for each of the past 3 years (based on wedding_date),
