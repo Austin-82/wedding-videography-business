@@ -3,21 +3,14 @@ USE wedding_video_company_db;
 -- 1. 
 -- Calculate total revenue by month over the latest year, sorted by revenue in descending order
 
-WITH CTE AS (
-	SELECT
-		booked_date,
-		order_amount
-	FROM orders
-	WHERE
-		YEAR(booked_date) = (SELECT MAX(YEAR(booked_date)) FROM orders)
-)
 SELECT
 	SUM(order_amount) AS 'Total Revenue',
-    DATE_FORMAT(booked_date, "%M") AS month,
-    YEAR(booked_date) AS year
-FROM CTE
-GROUP BY MONTH(booked_date), Year(booked_date), month
-ORDER BY 1 DESC;
+	DATE_FORMAT(booked_date, '%M') AS month,
+	YEAR(booked_date) AS year
+FROM orders
+WHERE YEAR(booked_date) = YEAR((SELECT MAX(booked_date) FROM orders))
+GROUP BY 2, 3
+ORDER BY SUM(order_amount) DESC
 
 
 
