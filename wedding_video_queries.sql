@@ -3,28 +3,41 @@ USE wedding_video_company_db;
 -- 1. 
 -- Calculate total revenue by month over the latest year, sorted by revenue in descending order
 
+WITH CTE AS (
+	SELECT
+		booked_date,
+		order_amount
+	FROM orders
+	WHERE
+		YEAR(booked_date) = (SELECT MAX(YEAR(booked_date)) FROM orders)
+)
 SELECT
 	SUM(order_amount) AS 'Total Revenue',
-	DATE_FORMAT(booked_date, '%M') AS month,
-	YEAR(booked_date) AS year
-FROM orders
-WHERE YEAR(booked_date) = YEAR((SELECT MAX(booked_date) FROM orders))
-GROUP BY 2, 3
-ORDER BY SUM(order_amount) DESC
+    DATE_FORMAT(booked_date, "%M") AS month,
+    YEAR(booked_date) AS year
+FROM CTE
+GROUP BY MONTH(booked_date), Year(booked_date), month
+ORDER BY 1 DESC;
 
 
 
 -- 2.
 -- Calculate total revenue for each package type over the past 12 months, sorted by revenue in descending order
 
-SELECT
-	SUM(order_amount) AS order_amount,
-	package_type 
-FROM orders
-WHERE booked_date >= DATE_SUB((SELECT MAX(booked_date) FROM orders), INTERVAL 12 Month)
-GROUP BY package_type
-ORDER BY SUM(order_amount) DESC
+WITH CTE AS
+(
+	SELECT
+		booked_date,
+		order_amount,
+		package_type
+	FROM orders
+	WHERE booked_date >= DATE_SUB((SELECT MAX(booked_date) FROM orders), INTERVAL 12 Month)
+)
 
+SELECT package_type, SUM(order_amount) AS 'Total Revenue'
+FROM CTE
+GROUP BY package_type
+ORDER BY 2 DESC;
 
 -- 3.
 -- Identify videographers who shot the most weddings for each of the past 3 years (based on wedding_date),
@@ -81,7 +94,8 @@ WHERE count_ranking = 1;
 -- For each year, 
 -- find the month with the highest and lowest number of bookings
 -- include the average package price for the selected months
-WITH CTE AS (
+
+WITH rank_months_cte AS (
 	SELECT
 		DATE_FORMAT(booked_date, '%M') AS month,
 		YEAR(booked_date) AS year,
@@ -90,17 +104,19 @@ WITH CTE AS (
 		COUNT(order_id) AS booking_count
 	FROM orders
 	GROUP BY month, YEAR(booked_date)
-)
-
+), max_min_cte AS(
 SELECT 
 	year,
 	MAX(booking_count) OVER (PARTITION BY year) AS max_month_bookings,
 	MIN(booking_count) OVER (PARTITION BY year) AS min_month_bookings,
 	CASE WHEN count_ranking = 1 THEN month END AS highest_booking_month,
-	CASE WHEN count_ranking = 12 THEN month END AS lowest_booking_month,
+	CASE WHEN count_ranking = MAX(count_ranking) OVER (PARTITION BY year) THEN month END AS lowest_booking_month,
 	ROUND(avg_order_amount, 2) AS avg_package_price
-FROM CTE
-WHERE count_ranking IN (1, 12);
+FROM rank_months_cte)
+
+SELECT *
+FROM max_min_cte
+WHERE highest_booking_month IS NOT NULL OR lowest_booking_month IS NOT NULL;
 
 -- 7.
 -- Show email, phone number, full name, and wedding date for clients with Florida or Pennsylvania weddings
