@@ -18,3 +18,4 @@ The queries executed include the following:
 8. Identify the most popular wedding video package for each year 
 9. Identify the month with the highest MoM increase for each year
 
+This wedding videography data was also used to create a sales dashboard in Tableau: https://public.tableau.com/app/profile/austin.shirk/viz/Wedding_Videography_Business_Dashboard/Dashboard1
